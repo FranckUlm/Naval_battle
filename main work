@@ -1,0 +1,278 @@
+import numpy as np
+
+class Grille:
+
+    def __init__(self, player, grid_player=[], grid_battlefield=[]):
+
+        self.player = player
+        self.grid_player = grid_player
+        self.grid_battlefield = grid_battlefield
+
+    def display(self):
+        """Affiche la grille du joueur"""
+
+        # taille et création de la grille
+        L = 12
+        C = 12
+        if self.grid_player == []:
+            self.grid_player = np.zeros((L, C), dtype=str)
+
+            print("     ******* grille de départ de {} *******".format(self.player))
+            colonne1 = ["X", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "X", "X"]
+            ligne1 = ["X", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "X", "X"]
+            colonne2 = ["X", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "X", "X"]
+            ligne2 = ["X", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "X", "X"]
+
+            # remplissage première et dernière colonnes
+            for k in range(0, C):
+                self.grid_player[k, 0] = colonne1[k]
+            for k in range(0, C):
+                self.grid_player[k, 11] = colonne2[k]
+            # remplissage première et dernière lignes
+            for k in range(0, L):
+                self.grid_player[0, k] = ligne1[k]
+            for k in range(0, L):
+                self.grid_player[11, k] = ligne2[k]
+            # remplissage de toutes les cases par 0
+            d = 1
+            for m in range(1, C - 1):
+                e = 1
+                for n in range(1, L - 1):
+                    self.grid_player[d, e] = "O"
+                    e += 1
+                d += 1
+            print(self.grid_player)
+
+    def boats_placement(self, x):
+        """fonction pour supprimer la taille du bateau déjà utilisée"""
+
+        if x in self.possible_boats:
+            self.possible_boats.remove(x)
+
+    def impossible_direction(self, x):
+        """fonction pour supprimer les directions impossibles à utiliser"""
+
+        if x in self.possible_directions:
+            self.possible_directions.remove(x)
+
+    def trans_row_in_numbers(self, x):
+        """transforme la lettre de la ligne rentrée en chiffre"""
+
+        self.letters = ["x", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
+        if x in self.letters:
+            # print(letters.index(n))
+            # print(type(letters.index(n)))
+            return self.letters.index(x)
+        else:
+            print("vous n'avez pas choisi une lettre disponible")
+
+    def modif_cell(self):
+        """placer un bateau"""
+        self.possible_boats = [1, 2, 3, 4, 5]
+        self.possible_directions = ["u", "r", "d", "l"]
+        self.nb_boat = 0
+        print(
+            "{} il vous reste le(s) bateau(x) {} à placer, soit {} bateau(x).".format(self.player, self.possible_boats,
+                                                                                      5 - self.nb_boat))
+        # boucle qui s'arrête lorsqu'on a placé les 5 bateaux.
+        while self.nb_boat != 1:
+            self.possible_directions = ["u", "r", "d", "l"]
+            # vérifie si la taille du bateau est disponible
+            b = 0
+            while b != 1:
+                size = int(input("Quelle taille de bateau voulez-vous placer ? "))
+                if size not in self.possible_boats:
+                    print("la taille du bateau n'est pas disponible.")
+
+                else:
+                    b = 1
+            # vérifie si la position d'origine est possible.
+            self.origin_position_is_good = 0
+            while self.origin_position_is_good != 1:
+                [origin_row, origin_column] = list(
+                    input("Où souhaitez-vous placer l'origine de votre bateau ? ligne/colonne : "))
+
+                origin_row = self.trans_row_in_numbers(origin_row)
+                origin_column = int(origin_column)
+
+                # indiquer les directions possibles en fonction de la position d'origine
+                if size != 1:
+                    try:
+                        for k in range(0, size):
+                            if self.grid_player[origin_row - k, origin_column] != "O":
+                                self.impossible_direction("u")
+                            if self.grid_player[origin_row, origin_column + k] != "O":
+                                self.impossible_direction("r")
+                            if self.grid_player[origin_row + k, origin_column] != "O":
+                                self.impossible_direction("d")
+                            if self.grid_player[origin_row, origin_column - k] != "O":
+                                self.impossible_direction("l")
+                        print("Les directions possibles sont :", self.possible_directions)
+
+                    except IndexError:
+                        print("Les directions possibles sont :", self.possible_directions)
+
+                    good_direction = 0
+
+                    while good_direction != 1:
+                        direction = input("Dans quelle direction souhaitez-vous disposer votre bateau ? ")
+                        if direction in self.possible_directions:
+                            good_direction = 1
+                        else:
+                            good_direction = 0
+                            print("Vous n'avez pas choisi une direction disponible.")
+
+                    # placer le bateau vers le haut
+                    if direction == "u":
+                        for k in range(0, size):
+                            print("     ******* grille de départ de {} *******".format(self.player))
+                            self.grid_player[origin_row - k, origin_column] = size
+                        self.nb_boat += 1
+                        print(self.grid_player)
+                        self.boats_placement(size)
+                        print("{} il vous reste le(s) bateau(x) {} à placer, soit {} bateau(x).".format(self.player, self.possible_boats, 5-self.nb_boat))
+                        self.origin_position_is_good = 1
+
+                    # placer le bateau vers la droite
+                    if direction == "r":
+                        for k in range(0, size):
+                            self.grid_player[origin_row, origin_column + k] = size
+                        self.nb_boat += 1
+                        print("     ******* grille de départ de {} *******".format(self.player))
+                        print(self.grid_player)
+                        self.boats_placement(size)
+                        print("{} il vous reste le(s) bateau(x) {} à placer, soit {} bateau(x).".format(self.player, self.possible_boats, 5-self.nb_boat))
+                        self.origin_position_is_good = 1
+
+                    # placer le bateau vers le bas
+                    if direction == "d":
+                        for k in range(0, size):
+                            self.grid_player[origin_row + k, origin_column] = size
+                        self.nb_boat += 1
+                        print("     ******* grille de départ de {} *******".format(self.player))
+                        print(self.grid_player)
+                        self.boats_placement(size)
+                        print("{} il vous reste le(s) bateau(x) {} à placer, soit {} bateau(x).".format(self.player, self.possible_boats, 5-self.nb_boat))
+                        self.origin_position_is_good = 1
+
+                    # placer le bateau vers la gauche
+                    if direction == "l":
+                        for k in range(0, size):
+                            self.grid_player[origin_row, origin_column - k] = size
+                        self.nb_boat += 1
+                        print("     ******* grille de départ de {} *******".format(self.player))
+                        print(self.grid_player)
+                        self.boats_placement(size)
+                        print("{} il vous reste le(s) bateau(x) {} à placer, soit {} bateau(x).".format(self.player, self.possible_boats, 5-self.nb_boat))
+                        self.origin_position_is_good = 1
+                else:
+                    for k in range(0, size):
+                        if self.grid_player[origin_row - k, origin_column] != "O":
+                            self.impossible_direction("u")
+                        if self.grid_player[origin_row, origin_column + k] != "O":
+                            self.impossible_direction("r")
+                        if self.grid_player[origin_row + k, origin_column] != "O":
+                            self.impossible_direction("d")
+                        if self.grid_player[origin_row, origin_column - k] != "O":
+                            self.impossible_direction("l")
+                        if self.possible_directions == []:
+                            print("Cette case est déjà occupée.")
+                        else:
+                            self.grid_player[origin_row - k, origin_column] = size
+                            self.nb_boat += 1
+                            print("     ******* grille de départ de {} *******".format(self.player))
+                            print(self.grid_player)
+                            self.boats_placement(size)
+                            print("{} il vous reste le(s) bateau(x) {} à placer, soit {} bateau(x).".format(self.player, self.possible_boats, 5-self.nb_boat))
+                            self.origin_position_is_good = 1
+
+        # fin de la préparation du jeu
+        if self.nb_boat == 5:
+            print("{}, Tous vos bateaux sont placés.".format(self.player))
+
+    def shot(self, other_player):
+        """Fonction permettant à un joueur de tirer sur la grille de son opposant"""
+
+        [origin_row, origin_column] = list(input("Quelle case choisissez-vous ?"))
+        origin_row = trans_row_in_numbers(origin_row)
+        origin_column = int(origin_column)
+
+        other_player = Grille(other_player.player, other_player.grid_player, other_player.grid_battlefield)
+
+        # taille et création de la grille indiquant les cases touchées ou loupées.
+        L = 12
+        C = 12
+        if self.grid_battlefield == []:
+            self.grid_battlefield = np.zeros((L, C), dtype=str)
+            print("     ******* grille touchée/loupé de {} *******".format(self.player))
+            colonne1 = ["X", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "X", "X"]
+            ligne1 = ["X", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "X", "X"]
+            colonne2 = ["X", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "X", "X"]
+            ligne2 = ["X", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "X", "X"]
+            # remplissage première et dernière colonnes
+            for k in range(0, C):
+                self.grid_battlefield[k, 0] = colonne1[k]
+            for k in range(0, C):
+                self.grid_battlefield[k, 11] = colonne2[k]
+            # remplissage première et dernière lignes
+            for k in range(0, L):
+                self.grid_battlefield[0, k] = ligne1[k]
+            for k in range(0, L):
+                self.grid_battlefield[11, k] = ligne2[k]
+            # remplissage de toutes les cases par 0
+            d = 1
+            for m in range(1, C - 1):
+                e = 1
+                for n in range(1, L - 1):
+                    self.grid_battlefield[d, e] = "O"
+                    e += 1
+                d += 1
+
+        if other_player.grid_player[origin_row, origin_column] != "0":
+            self.grid_battlefield[origin_row, origin_column] = "X"
+            print("Touché !")
+        else:
+            self.grid_battlefield[origin_row, origin_column] = "M"
+            print("Loupé !")
+        print(self.grid_battlefield)
+
+def against(y, x):
+    """Savoir qui joue contre qui"""
+    print("{} joue contre {}.".format(y, x))
+
+def trans_row_in_numbers(n):
+    # transforme la lettre de la ligne rentrée en chiffre
+    letters = ["x", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
+    if n in letters:
+        # print(letters.index(n))
+        # print(type(letters.index(n)))
+        return letters.index(n)
+    else:
+        print("vous n'avez pas choisi une lettre disponible")
+
+player1_name = input("Nom du joueur 1 ? ")
+player2_name = input("Nom du joueur 2 ? ")
+against(player1_name, player2_name)
+
+player1_name = Grille(player1_name)
+player2_name = Grille(player2_name)
+
+player1_name.display()
+player2_name.display()
+
+#placement des bateaux sur les grilles
+player1_name.modif_cell()
+player2_name.modif_cell()
+
+#attaque sur la grille adverse
+game = 100
+while game != 0:
+    if game % 2 == 0:
+        print("A {} de jouer".format(player2_name))
+        player2_name.shot(player1_name)
+        game -= 1
+    else:
+        print("A {} de jouer".format(player1_name))
+        player1_name.shot(player2_name)
+        game -= 1
+
